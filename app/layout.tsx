@@ -66,9 +66,9 @@ export default function RootLayout({
 
           <ul className="nav-center">
             <li><Link href="/productos" className="nav-link">Productos</Link></li>
-            <li><Link href="/productos" className="nav-link">Sectores</Link></li>
-            <li><Link href="/productos" className="nav-link">Tecnolog&iacute;a</Link></li>
-            <li><Link href="/productos" className="nav-link">Soporte</Link></li>
+            <li><Link href="/sistema" className="nav-link">El sistema</Link></li>
+            <li><Link href="/sistema#tecnologia" className="nav-link">Tecnolog&iacute;a</Link></li>
+            <li><Link href="/sistema#sectores" className="nav-link">Sectores</Link></li>
             <li><Link href="/productos" className="nav-link">Contacto</Link></li>
           </ul>
 
