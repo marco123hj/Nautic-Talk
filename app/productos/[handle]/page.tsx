@@ -9,6 +9,14 @@ function formatPrice(amount: string, currency: string) {
   }).format(parseFloat(amount));
 }
 
+function ArrowRight({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" />
+    </svg>
+  );
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -32,9 +40,9 @@ export default async function ProductPage({
   } catch {
     return (
       <div className="error-message">
-        <p>No se pudo cargar el producto. Verifica las variables de entorno.</p>
-        <Link href="/productos" style={{ color: "var(--ocean)" }}>
-          &larr; Volver a productos
+        <p>No se pudo cargar el producto.</p>
+        <Link href="/productos" style={{ color: "var(--terracotta-deep)", display: "inline-block", marginTop: "1rem" }}>
+          &larr; Volver al cat&aacute;logo
         </Link>
       </div>
     );
@@ -46,14 +54,16 @@ export default async function ProductPage({
 
   const price = product.priceRange.minVariantPrice;
   const mainImage = product.images.edges[0]?.node;
-  const additionalImages = product.images.edges.slice(1);
+  const additionalImages = product.images.edges.slice(1, 5);
 
   return (
     <>
       <div className="page-header">
         <div className="page-header-breadcrumb">
-          <Link href="/">Inicio</Link> &nbsp;/&nbsp;{" "}
-          <Link href="/productos">Productos</Link> &nbsp;/&nbsp;{" "}
+          <Link href="/">Inicio</Link>
+          <span>&loz;</span>
+          <Link href="/productos">Cat&aacute;logo</Link>
+          <span>&loz;</span>
           {product.title}
         </div>
       </div>
@@ -83,7 +93,7 @@ export default async function ProductPage({
         </div>
 
         <div className="product-info">
-          <div className="product-vendor">{product.vendor || "NAUTIC TALK"}</div>
+          <div className="product-vendor">{product.vendor || "Nautic Talk"}</div>
           <h1>{product.title}</h1>
           <div className="product-price">
             {formatPrice(price.amount, price.currencyCode)}
@@ -95,7 +105,7 @@ export default async function ProductPage({
 
           {product.variants && product.variants.edges.length > 1 && (
             <>
-              <div className="product-variants-label">Opciones</div>
+              <div className="product-variants-label">Opciones disponibles</div>
               <div className="product-variants">
                 {product.variants.edges.map(({ node: variant }) => (
                   <span
@@ -111,7 +121,21 @@ export default async function ProductPage({
             </>
           )}
 
-          <button className="add-to-cart-btn">Comprar ahora &rarr;</button>
+          <button type="button" className="add-to-cart-btn">
+            <span>Comprar ahora</span>
+            <ArrowRight />
+          </button>
+
+          <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid var(--hairline)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", fontSize: "0.8125rem", color: "var(--text-muted)" }}>
+            <div>
+              <div style={{ fontFamily: "var(--mono)", fontSize: "0.625rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--terracotta)", marginBottom: "0.5rem" }}>Env&iacute;o</div>
+              <div>24&ndash;72h en toda la UE con seguimiento</div>
+            </div>
+            <div>
+              <div style={{ fontFamily: "var(--mono)", fontSize: "0.625rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--terracotta)", marginBottom: "0.5rem" }}>Garant&iacute;a</div>
+              <div>2 a&ntilde;os oficiales del fabricante</div>
+            </div>
+          </div>
         </div>
       </div>
     </>
