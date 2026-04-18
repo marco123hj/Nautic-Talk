@@ -2208,6 +2208,142 @@ button { font-family: inherit; }
   flex-wrap: wrap;
 }
 
+/* ==================== FOOTER HERO (full-width image above footer) ==================== */
+
+.footer-hero {
+  position: relative;
+  width: 100%;
+  min-height: 560px;
+  height: 72vh;
+  max-height: 780px;
+  overflow: hidden;
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+
+.footer-hero-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.footer-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  filter: saturate(0.95) brightness(0.92);
+}
+
+/* Gradient overlay: lighter top, fades to dark footer navy at bottom */
+.footer-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg,
+      rgba(12, 24, 41, 0.15) 0%,
+      rgba(12, 24, 41, 0.05) 30%,
+      rgba(12, 24, 41, 0.2) 60%,
+      rgba(7, 17, 30, 0.85) 95%,
+      var(--ink-deep) 100%
+    );
+}
+
+/* Soft vignette */
+.footer-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,0.25) 100%);
+  pointer-events: none;
+}
+
+.footer-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  padding: 0 2rem;
+  text-align: center;
+  color: var(--cream);
+  transform: translateY(-6vh);
+}
+
+.footer-hero-eyebrow {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 1.25rem;
+  padding: 0.4375rem 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.footer-hero-title {
+  font-family: var(--serif);
+  font-size: 4rem;
+  font-weight: 400;
+  line-height: 1.02;
+  color: var(--cream);
+  letter-spacing: -0.025em;
+  font-variation-settings: 'opsz' 144;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.35);
+}
+.footer-hero-title em {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--terracotta-soft);
+}
+
+.footer-hero-desc {
+  font-size: 1.0625rem;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 500px;
+  margin: 0 auto 2rem;
+  line-height: 1.65;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+}
+
+.footer-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
+}
+.footer-hero-cta:hover {
+  background: var(--cream);
+  color: var(--ink);
+  border-color: var(--cream);
+  transform: translateY(-1px);
+}
+.footer-hero-cta svg { transition: transform var(--transition); }
+.footer-hero-cta:hover svg { transform: translateX(3px); }
+
+/* Since footer hero already fades to --ink-deep, footer can lose its top spacing to feel joined */
+.footer-hero + .footer { padding-top: 3rem; }
+
 /* ==================== CATALOG LAYOUT (with filter sidebar) ==================== */
 
 .catalog-layout {
@@ -2707,6 +2843,11 @@ details.filters-section[open] > .filters-section-title svg { transform: rotate(-
   .catalog-layout { padding: 0 1.25rem 3rem; }
   .catalog-toolbar { flex-wrap: wrap; gap: 0.75rem; }
   .catalog-sort-select { min-width: 160px; }
+
+  .footer-hero { min-height: 440px; height: 60vh; }
+  .footer-hero-title { font-size: 2.25rem; }
+  .footer-hero-desc { font-size: 0.9375rem; }
+  .footer-hero-content { transform: translateY(-4vh); padding: 0 1.25rem; }
 
   .categories-grid { grid-template-columns: 1fr; gap: 1rem; padding: 0 1.25rem; }
   .category-card { padding: 2rem 1.5rem; }
