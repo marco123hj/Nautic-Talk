@@ -106,9 +106,10 @@ export default function ProductFilters({
   }, [products]);
 
   const toggleCategory = (cat: string) => {
-    const set = new Set(filters.categories);
-    set.has(cat) ? set.delete(cat) : set.add(cat);
-    onChange({ ...filters, categories: [...set] });
+    const next = filters.categories.includes(cat)
+      ? filters.categories.filter((c) => c !== cat)
+      : [...filters.categories, cat];
+    onChange({ ...filters, categories: next });
   };
 
   const clearAll = () => onChange(EMPTY_FILTERS);
