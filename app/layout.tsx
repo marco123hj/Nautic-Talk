@@ -1,28 +1,9 @@
-import type { Metadata } from "next";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import FooterHero from "@/components/FooterHero";
-import "./globals.css";
-
-export const metadata: Metadata = {
-  title: "Nautic Talk — Comunicación adaptada a tu mundo",
-  description:
-    "Intercomunicadores Bluetooth profesionales para n\u00e1utica, ciclismo y entornos laborales. Audio cristalino, full-duplex, resistente al agua. Sistemas para 2 o 3 personas.",
-};
-
+// Next.js requires a root layout. The real html/body live in app/[locale]/layout.tsx
+// so the lang attribute reflects the active locale.
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html lang="es">
-      <body>
-        <Header />
-        {children}
-        <FooterHero />
-        <Footer />
-      </body>
-    </html>
-  );
+  return children;
 }

@@ -133,6 +133,41 @@ const PRODUCT_BY_HANDLE_QUERY = `
   }
 `;
 
+// ---------- Helpers (safe to import from server or client components) ----------
+
+/** Assign a category to each product based on title/handle.
+ *  Order matters — more specific matches first.
+ */
+export function getCategory(product: {
+  title: string;
+  handle: string;
+}): string {
+  const t = product.title.toLowerCase();
+  const h = product.handle.toLowerCase();
+
+  if (h === "nautic-talk-trio" || h === "nautic-talk-duo") return "Intercomunicadores";
+  if (t.includes("gorra") || h.startsWith("pet-")) return "Merchandising";
+  if (t.startsWith("casco")) return "Cascos";
+  if (
+    t.startsWith("soporte") ||
+    h.includes("houder") ||
+    h.includes("klemhouder") ||
+    h.includes("modulehouder")
+  )
+    return "Soportes";
+  if (
+    t.includes("auricular") ||
+    t.includes("oorkappen") ||
+    h.includes("oorkappen") ||
+    h.includes("koptelefoon")
+  )
+    return "Auriculares";
+  if (t.includes("protector") || t.includes("viento") || h.includes("windkussen"))
+    return "Accesorios";
+
+  return "Accesorios";
+}
+
 // ---------- Types ----------
 
 export interface ShopifyImage {
@@ -183,12 +218,101 @@ interface ProductByHandleResponse {
   productByHandle: ShopifyProduct | null;
 }
 
+// ---------- Cart ----------
+
+const CART_CREATE_MUTATION = `
+  mutation CartCreate($input: CartInput!) {
+    cartCreate(input: $input) {
+      cart {
+        id
+        checkoutUrl
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+export interface CartCreateLine {
+  merchandiseId: string;
+  quantity: number;
+}
+
+interface CartCreateResponse {
+  cartCreate: {
+    cart: { id: string; checkoutUrl: string } | null;
+    userErrors: { field: string[]; message: string }[];
+  };
+}
+
+export async function createShopifyCart(
+  lines: CartCreateLine[]
+): Promise<{ id: string; checkoutUrl: string }> {
+  const data = await shopifyFetch<CartCreateResponse>(CART_CREATE_MUTATION, {
+    input: { lines },
+  });
+  const errors = data.cartCreate.userErrors;
+  if (errors.length) {
+    throw new Error(
+      `Shopify cart errors: ${errors.map((e) => e.message).join(", ")}`
+    );
+  }
+  if (!data.cartCreate.cart) {
+    throw new Error("Shopify returned no cart");
+  }
+  return data.cartCreate.cart;
+}
+
 // ---------- Public helpers ----------
 
 export async function getProducts(
   first: number = 20
 ): Promise<ShopifyProduct[]> {
   const data = await shopifyFetch<ProductsResponse>(PRODUCTS_QUERY, {
+    first,
+  });
+  return data.products.edges.map((edge) => edge.node);
+}
+
+const NEWEST_PRODUCTS_QUERY = `
+  query GetNewestProducts($first: Int!) {
+    products(first: $first, sortKey: CREATED_AT, reverse: true) {
+      edges {
+        node {
+          id
+          title
+          handle
+          description
+          vendor
+          productType
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          images(first: 1) {
+            edges {
+              node {
+                url
+                altText
+                width
+                height
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function getNewestProducts(
+  first: number = 8
+): Promise<ShopifyProduct[]> {
+  const data = await shopifyFetch<ProductsResponse>(NEWEST_PRODUCTS_QUERY, {
     first,
   });
   return data.products.edges.map((edge) => edge.node);

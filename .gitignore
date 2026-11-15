@@ -30,6 +30,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# taste-skill inspector working output (screenshots, reports)
+/.taste-skill/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

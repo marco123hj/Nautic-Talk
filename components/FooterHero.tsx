@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 function ArrowRight() {
   return (
@@ -9,28 +12,22 @@ function ArrowRight() {
 }
 
 export default function FooterHero() {
+  const t = useTranslations("footerHero");
+
   return (
     <section className="footer-hero" aria-label="Nautic Talk">
       <div className="footer-hero-image">
-        {/* Replace public/footer-hero.jpg with your own image to change this */}
-        <img
-          src="/footer-hero.jpg"
-          alt="Atardecer sobre el Mediterr\u00e1neo"
-          loading="lazy"
-        />
+        <img src="/footer-hero.jpg" alt={t("imageAlt")} loading="lazy" />
       </div>
 
       <div className="footer-hero-content">
-        <span className="footer-hero-eyebrow">Nautic Talk</span>
+        <span className="footer-hero-eyebrow">{t("eyebrow")}</span>
         <h2 className="footer-hero-title">
-          Donde el mar <em>encuentra la se&ntilde;al</em>
+          {t("title1")} <em>{t("titleEm")}</em>
         </h2>
-        <p className="footer-hero-desc">
-          Intercomunicadores que resisten sal, viento y horas de traves&iacute;a.
-          Para los que hacen del mar su sitio de trabajo.
-        </p>
+        <p className="footer-hero-desc">{t("desc")}</p>
         <Link href="/productos" className="footer-hero-cta">
-          <span>Descubrir el sistema</span>
+          <span>{t("cta")}</span>
           <ArrowRight />
         </Link>
       </div>

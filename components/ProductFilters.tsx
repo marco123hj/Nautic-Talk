@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import type { ShopifyProduct } from "@/lib/shopify";
+import { useTranslations } from "next-intl";
+import { getCategory, type ShopifyProduct } from "@/lib/shopify";
+
+export { getCategory };
 
 export interface FilterState {
   categories: string[];
@@ -17,39 +20,21 @@ export const EMPTY_FILTERS: FilterState = {
   search: "",
 };
 
-/* Assign a category to each product based on title/handle.
-   Order matters — more specific matches first. */
-export function getCategory(product: ShopifyProduct): string {
-  const t = product.title.toLowerCase();
-  const h = product.handle.toLowerCase();
+type CategoryKey =
+  | "Intercomunicadores"
+  | "Soportes"
+  | "Cascos"
+  | "Auriculares"
+  | "Accesorios"
+  | "Merchandising";
 
-  if (h === "nautic-talk-trio" || h === "nautic-talk-duo") return "Intercomunicadores";
-
-  // Gorras first — unambiguous merch
-  if (t.includes("gorra") || h.startsWith("pet-")) return "Merchandising";
-
-  // If title *starts* with "Casco", it's a casco even if bundled with a soporte
-  if (t.startsWith("casco")) return "Cascos";
-
-  // Anything starting with "Soporte" is a mount
-  if (t.startsWith("soporte") || h.includes("houder") || h.includes("klemhouder") || h.includes("modulehouder")) return "Soportes";
-
-  // Auriculares
-  if (t.includes("auricular") || t.includes("oorkappen") || h.includes("oorkappen") || h.includes("koptelefoon")) return "Auriculares";
-
-  // Accessories (wind cover, etc.)
-  if (t.includes("protector") || t.includes("viento") || h.includes("windkussen")) return "Accesorios";
-
-  return "Accesorios";
-}
-
-const CATEGORIES = [
-  "Intercomunicadores",
-  "Soportes",
-  "Cascos",
-  "Auriculares",
-  "Accesorios",
-  "Merchandising",
+const CATEGORIES: { key: CategoryKey; tkey: string }[] = [
+  { key: "Intercomunicadores", tkey: "catIntercoms" },
+  { key: "Soportes", tkey: "catMounts" },
+  { key: "Cascos", tkey: "catHelmets" },
+  { key: "Auriculares", tkey: "catHeadsets" },
+  { key: "Accesorios", tkey: "catAccessories" },
+  { key: "Merchandising", tkey: "catMerch" },
 ];
 
 function ChevronDown() {
@@ -87,7 +72,8 @@ export default function ProductFilters({
   resultCount,
   totalCount,
 }: Props) {
-  /* Derive available counts per category from current product set */
+  const t = useTranslations("filters");
+
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const p of products) {
@@ -124,18 +110,20 @@ export default function ProductFilters({
     <div className="filters">
       <div className="filters-head">
         <div className="filters-head-left">
-          <div className="filters-head-label">Filtros</div>
+          <div className="filters-head-label">{t("title")}</div>
           <div className="filters-head-count">
-            {resultCount} de {totalCount} producto{totalCount === 1 ? "" : "s"}
+            {totalCount === 1
+              ? t("countProduct", { filtered: resultCount, total: totalCount })
+              : t("countProducts", { filtered: resultCount, total: totalCount })}
           </div>
         </div>
         {activeFilterCount > 0 && (
           <button type="button" onClick={clearAll} className="filters-clear-btn">
-            Limpiar {activeFilterCount > 0 && `(${activeFilterCount})`}
+            {t("clear")} ({activeFilterCount})
           </button>
         )}
         {isMobileOpen && onMobileClose && (
-          <button type="button" onClick={onMobileClose} className="filters-close-btn" aria-label="Cerrar filtros">
+          <button type="button" onClick={onMobileClose} className="filters-close-btn" aria-label={t("close")}>
             <CloseIcon />
           </button>
         )}
@@ -145,36 +133,36 @@ export default function ProductFilters({
       <div className="filters-section">
         <input
           type="search"
-          placeholder="Buscar producto\u2026"
+          placeholder={t("searchPlaceholder")}
           value={filters.search}
           onChange={(e) => onChange({ ...filters, search: e.target.value })}
           className="filters-search"
-          aria-label="Buscar producto"
+          aria-label={t("searchAria")}
         />
       </div>
 
       {/* CATEGORY */}
       <details className="filters-section" open>
         <summary className="filters-section-title">
-          <span>Categor&iacute;a</span>
+          <span>{t("sectionCategory")}</span>
           <ChevronDown />
         </summary>
         <ul className="filters-list">
           {CATEGORIES.map((cat) => {
-            const count = categoryCounts[cat] ?? 0;
-            const checked = filters.categories.includes(cat);
+            const count = categoryCounts[cat.key] ?? 0;
+            const checked = filters.categories.includes(cat.key);
             const disabled = count === 0;
             return (
-              <li key={cat}>
+              <li key={cat.key}>
                 <label className={`filters-check${disabled ? " filters-check--disabled" : ""}`}>
                   <input
                     type="checkbox"
                     checked={checked}
-                    onChange={() => toggleCategory(cat)}
+                    onChange={() => toggleCategory(cat.key)}
                     disabled={disabled}
                   />
                   <span className="filters-check-box" aria-hidden />
-                  <span className="filters-check-label">{cat}</span>
+                  <span className="filters-check-label">{t(cat.tkey)}</span>
                   <span className="filters-check-count">{count}</span>
                 </label>
               </li>
@@ -186,12 +174,12 @@ export default function ProductFilters({
       {/* PRICE */}
       <details className="filters-section" open>
         <summary className="filters-section-title">
-          <span>Precio</span>
+          <span>{t("sectionPrice")}</span>
           <ChevronDown />
         </summary>
         <div className="filters-price-row">
           <div className="filters-price-field">
-            <label htmlFor="priceMin">M&iacute;n</label>
+            <label htmlFor="priceMin">{t("priceMin")}</label>
             <input
               id="priceMin"
               type="number"
@@ -210,7 +198,7 @@ export default function ProductFilters({
           </div>
           <div className="filters-price-sep" />
           <div className="filters-price-field">
-            <label htmlFor="priceMax">M&aacute;x</label>
+            <label htmlFor="priceMax">{t("priceMax")}</label>
             <input
               id="priceMax"
               type="number"
@@ -229,14 +217,16 @@ export default function ProductFilters({
           </div>
         </div>
         <div className="filters-price-range">
-          Rango: &euro;{priceRange.min} &ndash; &euro;{priceRange.max}
+          {t("priceRange", { min: priceRange.min, max: priceRange.max })}
         </div>
       </details>
 
       {isMobileOpen && onMobileClose && (
         <div className="filters-mobile-foot">
           <button type="button" onClick={onMobileClose} className="filters-apply-btn">
-            Ver {resultCount} resultado{resultCount === 1 ? "" : "s"}
+            {resultCount === 1
+              ? t("applyOne", { count: resultCount })
+              : t("apply", { count: resultCount })}
           </button>
         </div>
       )}
@@ -244,7 +234,6 @@ export default function ProductFilters({
   );
 
   if (isMobileOpen !== undefined) {
-    // Mobile drawer variant
     return (
       <>
         {isMobileOpen && (
@@ -252,7 +241,7 @@ export default function ProductFilters({
             <aside
               className="filters-drawer"
               onClick={(e) => e.stopPropagation()}
-              aria-label="Filtros"
+              aria-label={t("title")}
             >
               {content}
             </aside>
@@ -262,6 +251,5 @@ export default function ProductFilters({
     );
   }
 
-  // Desktop sidebar
   return <div className="filters-sidebar">{content}</div>;
 }

@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import type { ShopifyProduct } from "@/lib/shopify";
 import ProductFilters, {
   EMPTY_FILTERS,
@@ -9,11 +11,22 @@ import ProductFilters, {
   getCategory,
 } from "./ProductFilters";
 
-function formatPrice(amount: string, currency: string) {
-  return new Intl.NumberFormat("es-ES", {
+function formatPrice(amount: string, currency: string, locale: string = "es-ES") {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
   }).format(parseFloat(amount));
+}
+
+function priceLocale(locale: string) {
+  switch (locale) {
+    case "nl":
+      return "nl-NL";
+    case "en":
+      return "en-GB";
+    default:
+      return "es-ES";
+  }
 }
 
 function ArrowRight({ size = 12 }: { size?: number }) {
@@ -42,21 +55,43 @@ function SortIcon() {
 
 type SortKey = "relevance" | "price-asc" | "price-desc" | "name";
 
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "relevance", label: "Destacados" },
-  { value: "price-asc", label: "Precio: menor a mayor" },
-  { value: "price-desc", label: "Precio: mayor a menor" },
-  { value: "name", label: "Nombre (A-Z)" },
-];
-
 interface Props {
   products: ShopifyProduct[];
 }
 
 export default function CatalogClient({ products }: Props) {
-  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const t = useTranslations("catalog");
+  const locale = useLocale();
+  const priceLoc = priceLocale(locale);
+
+  const sortOptions: { value: SortKey; label: string }[] = [
+    { value: "relevance", label: t("sortRelevance") },
+    { value: "price-asc", label: t("sortPriceAsc") },
+    { value: "price-desc", label: t("sortPriceDesc") },
+    { value: "name", label: t("sortName") },
+  ];
+
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams.get("category");
+  const urlQuery = searchParams.get("q");
+
+  const [filters, setFilters] = useState<FilterState>(() => ({
+    ...EMPTY_FILTERS,
+    categories: urlCategory ? [urlCategory] : [],
+    search: urlQuery ?? "",
+  }));
   const [sort, setSort] = useState<SortKey>("relevance");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Re-sync filters when the URL changes (e.g. user clicks a different nav category)
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      categories: urlCategory ? [urlCategory] : [],
+      search: urlQuery ?? prev.search,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlCategory, urlQuery]);
 
   const filtered = useMemo(() => {
     const q = filters.search.trim().toLowerCase();
@@ -93,7 +128,7 @@ export default function CatalogClient({ products }: Props) {
           parseFloat(a.priceRange.minVariantPrice.amount),
       );
     } else if (sort === "name") {
-      result = [...result].sort((a, b) => a.title.localeCompare(b.title, "es"));
+      result = [...result].sort((a, b) => a.title.localeCompare(b.title, locale));
     } else if (sort === "relevance") {
       // Promote Trio and Duo to top
       const weight = (p: ShopifyProduct) => {
@@ -133,26 +168,28 @@ export default function CatalogClient({ products }: Props) {
             type="button"
             className="catalog-filter-btn"
             onClick={() => setMobileFiltersOpen(true)}
-            aria-label="Abrir filtros"
+            aria-label={t("toolbarFilters")}
           >
             <FilterIcon />
-            <span>Filtros</span>
+            <span>{t("toolbarFilters")}</span>
             {activeFilterCount > 0 && (
               <span className="catalog-filter-btn-badge">{activeFilterCount}</span>
             )}
           </button>
           <div className="catalog-toolbar-info">
-            {filtered.length} de {products.length} producto{products.length === 1 ? "" : "s"}
+            {products.length === 1
+              ? t("toolbarCountProduct", { filtered: filtered.length, total: products.length })
+              : t("toolbarCountProducts", { filtered: filtered.length, total: products.length })}
           </div>
           <label className="catalog-sort">
-            <span className="catalog-sort-label">Ordenar</span>
+            <span className="catalog-sort-label">{t("toolbarSort")}</span>
             <div className="catalog-sort-select-wrap">
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as SortKey)}
                 className="catalog-sort-select"
               >
-                {SORT_OPTIONS.map((o) => (
+                {sortOptions.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
@@ -166,16 +203,14 @@ export default function CatalogClient({ products }: Props) {
         {/* Results */}
         {filtered.length === 0 ? (
           <div className="catalog-empty">
-            <p className="empty-message">
-              Ning&uacute;n producto coincide con los filtros seleccionados.
-            </p>
+            <p className="empty-message">{t("emptyFiltered")}</p>
             <button
               type="button"
               onClick={() => setFilters(EMPTY_FILTERS)}
               className="btn-link"
               style={{ marginTop: "1.5rem" }}
             >
-              <span>Limpiar filtros</span>
+              <span>{t("clearFilters")}</span>
               <ArrowRight />
             </button>
           </div>
@@ -184,7 +219,6 @@ export default function CatalogClient({ products }: Props) {
             {filtered.map((product, index) => {
               const image = product.images.edges[0]?.node;
               const price = product.priceRange.minVariantPrice;
-              const num = String(index + 1).padStart(2, "0");
 
               return (
                 <Link
@@ -192,7 +226,6 @@ export default function CatalogClient({ products }: Props) {
                   href={`/productos/${product.handle}`}
                   className="product-card"
                 >
-                  <div className="product-card-num">№ {num}</div>
                   <div className="product-card-image">
                     {image && (
                       <img
@@ -206,10 +239,10 @@ export default function CatalogClient({ products }: Props) {
                   <div className="product-card-title">{product.title}</div>
                   <div className="product-card-bottom">
                     <span className="product-card-price">
-                      {formatPrice(price.amount, price.currencyCode)}
+                      {formatPrice(price.amount, price.currencyCode, priceLoc)}
                     </span>
                     <span className="product-card-arrow">
-                      Ver <ArrowRight size={12} />
+                      {t("viewShort")} <ArrowRight size={12} />
                     </span>
                   </div>
                 </Link>

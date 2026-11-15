@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useTranslations } from "next-intl";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useCart } from "./cart/CartContext";
 
 /* ============ ICONS ============ */
 
@@ -27,25 +29,16 @@ function CompassMark({ size = 24 }: { size?: number }) {
 
 function SearchIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="9" cy="9" r="6" />
       <path d="M17 17l-3.5-3.5" />
     </svg>
   );
 }
 
-function AccountIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="10" cy="6.5" r="3" />
-      <path d="M3.5 17c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5" />
-    </svg>
-  );
-}
-
 function CartIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 6h14l-1.5 8.5a1.5 1.5 0 01-1.5 1.2H7a1.5 1.5 0 01-1.5-1.2L4 6z" />
       <path d="M4 6l-1-3H1" />
       <circle cx="8" cy="18" r="1" fill="currentColor" stroke="none" />
@@ -56,7 +49,7 @@ function CartIcon() {
 
 function MenuIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
       <path d="M3 6h14M3 10h14M3 14h14" />
     </svg>
   );
@@ -70,10 +63,10 @@ function CloseIcon() {
   );
 }
 
-function ChevronDown() {
+function CheckIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 3.5l3 3 3-3" />
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8.5l3.5 3.5L13 4.5" />
     </svg>
   );
 }
@@ -86,220 +79,125 @@ function ArrowIcon() {
   );
 }
 
-/* ============ CATEGORY DATA ============ */
-
-const PRODUCT_CATEGORIES = [
-  { label: "Nautic Talk Trio", handle: "nautic-talk-trio", desc: "Para 3 personas" },
-  { label: "Nautic Talk Duo", handle: "nautic-talk-duo", desc: "Para 2 personas" },
-  { label: "Soportes y mounts", href: "/productos", desc: "Clip, adhesivo, magnético" },
-  { label: "Cascos y kits", href: "/productos", desc: "Cascos de seguridad" },
-  { label: "Auriculares", href: "/productos", desc: "Sets y recambios" },
-  { label: "Accesorios", href: "/productos", desc: "Antiviento, cables" },
-];
-
-const SECTORS = [
-  { label: "N\u00e1utica", href: "/sistema#sectores" },
-  { label: "Ciclismo", href: "/sistema#sectores" },
-  { label: "Industria y obra", href: "/sistema#sectores" },
-];
-
 /* ============ COMPONENT ============ */
 
 export default function Header() {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const t = useTranslations("nav");
+  const tAnn = useTranslations("announce");
+  const tFilters = useTranslations("filters");
+  const tScenarios = useTranslations("scenarios");
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
+  const { count: cartCount, openCart } = useCart();
 
-  // Close all overlays on route change
   useEffect(() => {
-    setDropdownOpen(false);
-    setSearchOpen(false);
     setDrawerOpen(false);
   }, [pathname]);
 
-  // Escape key closes overlays
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSearchOpen(false);
-        setDrawerOpen(false);
-      }
+      if (e.key === "Escape") setDrawerOpen(false);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Lock body scroll when drawer or search is open
   useEffect(() => {
-    if (drawerOpen || searchOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = drawerOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [drawerOpen, searchOpen]);
+  }, [drawerOpen]);
 
-  // Focus search input when opened
-  useEffect(() => {
-    if (searchOpen && searchInputRef.current) {
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    }
-  }, [searchOpen]);
+  const categories = [
+    { label: tFilters("catIntercoms"), href: "/productos?category=Intercomunicadores" },
+    { label: tFilters("catMounts"), href: "/productos?category=Soportes" },
+    { label: tFilters("catHelmets"), href: "/productos?category=Cascos" },
+    { label: tFilters("catHeadsets"), href: "/productos?category=Auriculares" },
+    { label: tFilters("catAccessories"), href: "/productos?category=Accesorios" },
+  ];
 
-  const cartCount = 0; // TODO: wire to real cart
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const term = query.trim();
+    router.push(term ? `/productos?q=${encodeURIComponent(term)}` : "/productos");
+  }
 
   return (
     <>
-      {/* TOP ANNOUNCEMENT */}
-      <div className="announce">
-        <span>Env&iacute;o gratuito en pen&iacute;nsula desde &euro;120</span>
-        <span className="announce-divider">&loz;</span>
-        <span>Garant&iacute;a oficial 2 a&ntilde;os</span>
-        <span className="announce-divider">&loz;</span>
-        <span>Asesoramiento t&eacute;cnico en espa&ntilde;ol</span>
-      </div>
-
-      {/* NAV */}
-      <nav className="nav">
-        <Link href="/" className="nav-brand" aria-label="Nautic Talk">
-          <div className="nav-mark">
-            <CompassMark />
-          </div>
-          <div className="nav-wordmark">
-            <span className="nav-wordmark-name">Nautic Talk</span>
-            <span className="nav-wordmark-sub">Comunicaci&oacute;n profesional</span>
-          </div>
-        </Link>
-
-        <ul className="nav-center">
-          <li
-            className="nav-item-dropdown"
-            onMouseEnter={() => setDropdownOpen(true)}
-            onMouseLeave={() => setDropdownOpen(false)}
-          >
-            <Link href="/productos" className="nav-link nav-link-trigger">
-              Productos <ChevronDown />
-            </Link>
-            {dropdownOpen && (
-              <div className="nav-dropdown">
-                <div className="nav-dropdown-inner">
-                  <div className="nav-dropdown-col">
-                    <div className="nav-dropdown-label">Cat&aacute;logo</div>
-                    <ul>
-                      {PRODUCT_CATEGORIES.map((cat) => (
-                        <li key={cat.label}>
-                          <Link
-                            href={cat.handle ? `/productos/${cat.handle}` : cat.href ?? "/productos"}
-                            className="nav-dropdown-item"
-                          >
-                            <span className="nav-dropdown-item-title">{cat.label}</span>
-                            <span className="nav-dropdown-item-desc">{cat.desc}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="nav-dropdown-col">
-                    <div className="nav-dropdown-label">Sectores</div>
-                    <ul>
-                      {SECTORS.map((s) => (
-                        <li key={s.label}>
-                          <Link href={s.href} className="nav-dropdown-item">
-                            <span className="nav-dropdown-item-title">{s.label}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                    <Link href="/sistema" className="nav-dropdown-cta">
-                      Ver el sistema <ArrowIcon />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-          </li>
-          <li><Link href="/sistema" className="nav-link">El sistema</Link></li>
-          <li><Link href="/sistema#tecnologia" className="nav-link">Tecnolog&iacute;a</Link></li>
-          <li><Link href="/productos" className="nav-link">Contacto</Link></li>
-        </ul>
-
-        <div className="nav-actions">
-          <button
-            type="button"
-            className="nav-icon-btn"
-            onClick={() => setSearchOpen(true)}
-            aria-label="Buscar"
-          >
-            <SearchIcon />
-          </button>
-          <Link href="/productos" className="nav-icon-btn" aria-label="Cuenta">
-            <AccountIcon />
+      <header className="site-header">
+        {/* MAIN ROW */}
+        <div className="hdr-main">
+          <Link href="/" className="hdr-logo" aria-label="Nautic Talk">
+            <span className="hdr-logo-mark"><CompassMark /></span>
+            <span className="hdr-logo-text">
+              <span className="hdr-logo-name">Nautic Talk</span>
+              <span className="hdr-logo-sub">{t("wordmarkSub")}</span>
+            </span>
           </Link>
-          <button
-            type="button"
-            className="nav-icon-btn nav-cart-btn"
-            aria-label={`Carrito (${cartCount} productos)`}
-          >
-            <CartIcon />
-            {cartCount > 0 && <span className="nav-cart-badge">{cartCount}</span>}
-          </button>
-          <button
-            type="button"
-            className="nav-icon-btn nav-hamburger"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Men\u00fa"
-          >
-            <MenuIcon />
-          </button>
-        </div>
-      </nav>
 
-      {/* SEARCH MODAL */}
-      {searchOpen && (
-        <div className="search-modal" onClick={() => setSearchOpen(false)}>
-          <div className="search-modal-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="search-modal-head">
-              <div className="search-modal-input-wrap">
-                <SearchIcon />
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Buscar en Nautic Talk\u2026"
-                  className="search-modal-input"
-                />
-              </div>
-              <button
-                type="button"
-                className="search-modal-close"
-                onClick={() => setSearchOpen(false)}
-                aria-label="Cerrar b\u00fasqueda"
-              >
-                <CloseIcon />
-              </button>
-            </div>
-            <div className="search-modal-body">
-              <div className="search-modal-label">Sugerencias</div>
-              <ul className="search-modal-suggestions">
-                <li><Link href="/productos/nautic-talk-trio">Nautic Talk Trio</Link></li>
-                <li><Link href="/productos/nautic-talk-duo">Nautic Talk Duo</Link></li>
-                <li><Link href="/productos">Soportes</Link></li>
-                <li><Link href="/productos">Cascos y kits</Link></li>
-                <li><Link href="/productos">Auriculares</Link></li>
-              </ul>
-              <div className="search-modal-hint">
-                Pulsa <kbd>Esc</kbd> para cerrar &middot; <kbd>Enter</kbd> para buscar
-              </div>
-            </div>
+          <form className="hdr-search" onSubmit={handleSearch} role="search">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("search.placeholder")}
+              aria-label={t("searchAria")}
+            />
+            <button type="submit" aria-label={t("searchAria")}>
+              <SearchIcon />
+            </button>
+          </form>
+
+          <div className="hdr-actions">
+            <Suspense fallback={null}>
+              <LanguageSwitcher />
+            </Suspense>
+            <button
+              type="button"
+              className="hdr-action hdr-cart"
+              onClick={openCart}
+              aria-label={t("cartAria")}
+            >
+              <span className="hdr-action-icon">
+                <CartIcon />
+                {cartCount > 0 && <span className="hdr-cart-badge">{cartCount}</span>}
+              </span>
+              <span className="hdr-action-label">{t("cartAria")}</span>
+            </button>
+            <button
+              type="button"
+              className="hdr-action hdr-hamburger"
+              onClick={() => setDrawerOpen(true)}
+              aria-label={t("menuAria")}
+            >
+              <MenuIcon />
+            </button>
           </div>
         </div>
-      )}
+
+        {/* ORANGE CATEGORY NAV */}
+        <nav className="hdr-nav" aria-label={t("products")}>
+          <ul className="hdr-nav-list">
+            <li><Link href="/productos">{t("products")}</Link></li>
+            {categories.map((c) => (
+              <li key={c.href}><Link href={c.href}>{c.label}</Link></li>
+            ))}
+            <li><Link href="/sistema">{t("system")}</Link></li>
+            <li><Link href="/contacto">{t("contact")}</Link></li>
+          </ul>
+        </nav>
+
+        {/* USP STRIP */}
+        <div className="hdr-usp">
+          <span><CheckIcon /> {tAnn("shipping")}</span>
+          <span><CheckIcon /> {tAnn("warranty")}</span>
+          <span><CheckIcon /> {tAnn("support")}</span>
+        </div>
+      </header>
 
       {/* MOBILE DRAWER */}
       {drawerOpen && (
@@ -307,65 +205,53 @@ export default function Header() {
           <aside
             className="drawer"
             onClick={(e) => e.stopPropagation()}
-            aria-label="Men\u00fa principal"
+            aria-label={t("menuAria")}
           >
             <div className="drawer-head">
               <div className="drawer-brand">
-                <div className="nav-mark"><CompassMark /></div>
-                <span className="nav-wordmark-name">Nautic Talk</span>
+                <div className="hdr-logo-mark"><CompassMark /></div>
+                <span className="hdr-logo-name">Nautic Talk</span>
               </div>
               <button
                 type="button"
-                className="nav-icon-btn"
+                className="hdr-action"
                 onClick={() => setDrawerOpen(false)}
-                aria-label="Cerrar men\u00fa"
+                aria-label={t("closeAria")}
               >
                 <CloseIcon />
               </button>
             </div>
 
+            <form className="hdr-search drawer-search" onSubmit={handleSearch} role="search">
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("search.placeholder")}
+                aria-label={t("searchAria")}
+              />
+              <button type="submit" aria-label={t("searchAria")}>
+                <SearchIcon />
+              </button>
+            </form>
+
             <div className="drawer-body">
-              <details className="drawer-group">
-                <summary>
-                  <span>Productos</span>
-                  <ChevronDown />
-                </summary>
-                <ul className="drawer-sublist">
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <li key={cat.label}>
-                      <Link href={cat.handle ? `/productos/${cat.handle}` : cat.href ?? "/productos"}>
-                        {cat.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-
-              <details className="drawer-group">
-                <summary>
-                  <span>Sectores</span>
-                  <ChevronDown />
-                </summary>
-                <ul className="drawer-sublist">
-                  {SECTORS.map((s) => (
-                    <li key={s.label}><Link href={s.href}>{s.label}</Link></li>
-                  ))}
-                </ul>
-              </details>
-
-              <Link href="/sistema" className="drawer-link">El sistema</Link>
-              <Link href="/sistema#tecnologia" className="drawer-link">Tecnolog&iacute;a</Link>
-              <Link href="/productos" className="drawer-link">Contacto</Link>
+              <Link href="/productos" className="drawer-link">{t("products")}</Link>
+              {categories.map((c) => (
+                <Link key={c.href} href={c.href} className="drawer-link">{c.label}</Link>
+              ))}
+              <Link href="/sistema" className="drawer-link">{t("system")}</Link>
+              <Link href="/escenarios" className="drawer-link">{tScenarios("navLabel")}</Link>
+              <Link href="/sistema#tecnologia" className="drawer-link">{t("technology")}</Link>
+              <Link href="/contacto" className="drawer-link">{t("contact")}</Link>
             </div>
 
             <div className="drawer-foot">
               <Link href="/productos" className="drawer-cta">
-                <span>Ver el cat&aacute;logo</span>
+                <span>{t("drawer.ctaCatalog")}</span>
                 <ArrowIcon />
               </Link>
-              <div className="drawer-sub">
-                Env&iacute;o gratis desde &euro;120 &middot; Garant&iacute;a 2 a&ntilde;os
-              </div>
+              <div className="drawer-sub">{t("drawer.sub")}</div>
             </div>
           </aside>
         </div>
