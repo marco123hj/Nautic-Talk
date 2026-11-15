@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import ContactForm from "@/components/ContactForm";
+import { COMPANY } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -110,7 +111,7 @@ export default async function ContactPage({
                 <IconMail />
                 <div>
                   <strong>{t("channelEmail")}</strong>
-                  <a href={`mailto:${t("emailAddress")}`}>{t("emailAddress")}</a>
+                  <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
                 </div>
               </li>
               <li>
@@ -118,11 +119,11 @@ export default async function ContactPage({
                 <div>
                   <strong>{t("channelWhatsapp")}</strong>
                   <a
-                    href={`https://wa.me/${t("phoneNumber").replace(/[^0-9]/g, "")}`}
+                    href={`https://wa.me/${COMPANY.phone.replace(/[^0-9]/g, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {t("phoneNumber")}
+                    {COMPANY.phone}
                   </a>
                 </div>
               </li>
@@ -136,8 +137,14 @@ export default async function ContactPage({
               <li>
                 <IconMapPin />
                 <div>
-                  <strong>{t("channelLocation")}</strong>
-                  <span>{t("channelLocationValue")}</span>
+                  <strong>{t("channelCompany")}</strong>
+                  <span>
+                    {COMPANY.legalName}
+                    <br />
+                    {COMPANY.street}, {COMPANY.postcode} {COMPANY.city}, {t("country")}
+                    <br />
+                    {t("kvkLabel")} {COMPANY.kvk} · {t("vatLabel")} {COMPANY.vat}
+                  </span>
                 </div>
               </li>
             </ul>

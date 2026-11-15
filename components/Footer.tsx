@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import NewsletterForm from "./NewsletterForm";
 import { Link } from "@/i18n/navigation";
 import { useFavorites } from "./favorites/FavoritesContext";
+import { COMPANY } from "@/lib/site";
 
 /* ============ ICONS ============ */
 
@@ -75,21 +76,12 @@ function IdealIcon() {
     </svg>
   );
 }
-function BizumIcon() {
-  return (
-    <svg width="28" height="18" viewBox="0 0 34 22" fill="none">
-      <rect width="34" height="22" rx="3" fill="#ffffff" />
-      <text x="17" y="15" textAnchor="middle" fontSize="7" fontWeight="700" fontFamily="sans-serif" fill="#00ABBC">Bizum</text>
-    </svg>
-  );
-}
 
 /* ============ COMPONENT ============ */
 
 export default function Footer() {
   const t = useTranslations("footer");
   const tFav = useTranslations("favorites");
-  const tContact = useTranslations("contact");
   const { count: favCount } = useFavorites();
   const year = new Date().getFullYear();
 
@@ -105,7 +97,7 @@ export default function Footer() {
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><IgIcon /></a>
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><FbIcon /></a>
               <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><LinkedInIcon /></a>
-              <a href={`mailto:${tContact("emailAddress")}`} aria-label="Email"><MailIcon /></a>
+              <a href={`mailto:${COMPANY.email}`} aria-label="Email"><MailIcon /></a>
             </div>
           </div>
 
@@ -125,6 +117,9 @@ export default function Footer() {
             <div className="footer-col-title">{t("colSupport")}</div>
             <ul className="footer-links">
               <li><Link href="/contacto">{t("contact")}</Link></li>
+              <li><Link href="/voorwaarden#levering">{t("shipping")}</Link></li>
+              <li><Link href="/retourneren">{t("returns")}</Link></li>
+              <li><Link href="/voorwaarden#garantie">{t("warranty")}</Link></li>
               <li>
                 <Link href="/favoritos">
                   {tFav("linkLabel")}
@@ -143,6 +138,19 @@ export default function Footer() {
           </div>
         </div>
 
+        <div className="footer-legal">
+          <p className="footer-company">
+            {COMPANY.legalName} · {COMPANY.street}, {COMPANY.postcode} {COMPANY.city} · {t("kvkLabel")}{" "}
+            {COMPANY.kvk} · {t("vatLabel")} {COMPANY.vat}
+          </p>
+          <ul className="footer-legal-links">
+            <li><Link href="/voorwaarden">{t("terms")}</Link></li>
+            <li><Link href="/retourneren">{t("returns")}</Link></li>
+            <li><Link href="/privacy">{t("privacy")}</Link></li>
+            <li><Link href="/cookies">{t("cookies")}</Link></li>
+          </ul>
+        </div>
+
         <div className="footer-bottom">
           <span className="footer-bottom-copy">{t("copyright", { year })}</span>
           <div className="footer-payments">
@@ -150,7 +158,6 @@ export default function Footer() {
             <MasterCardIcon />
             <PayPalIcon />
             <IdealIcon />
-            <BizumIcon />
           </div>
         </div>
       </div>

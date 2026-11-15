@@ -5642,3 +5642,175 @@ body { font-size: 1rem; }
 /* Form send states (contact form + newsletter) */
 .contact-form-error { border-left-color: #b42318; }
 .newsletter-status { margin-top: 0.75rem; font-size: 0.875rem; }
+
+/* ============================================================
+   LEGAL PAGES — terms, returns, privacy, cookies. One readable
+   column with a sticky index of the sections beside it.
+   ============================================================ */
+.legal {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 3.5rem 2.5rem 5rem;
+}
+.legal-head { margin-bottom: 3rem; }
+.legal-crumbs { margin-bottom: 1.25rem; font-size: 0.875rem; color: var(--text-muted); }
+.legal-crumbs a { color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; }
+.legal-head h1 {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.legal-intro { margin: 1.25rem 0 0; max-width: 38rem; font-size: 1.125rem; line-height: 1.55; color: var(--ink); }
+
+.legal-body {
+  display: grid;
+  grid-template-columns: minmax(0, 38rem) minmax(0, 1fr);
+  gap: clamp(2rem, 6vw, 6rem);
+  align-items: start;
+}
+.legal-section { margin-top: 2.5rem; scroll-margin-top: 12rem; }
+.legal-section:first-child { margin-top: 0; }
+.legal-section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.375rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+  color: var(--ink);
+}
+.legal-section p,
+.legal-section li { font-size: 1rem; line-height: 1.6; color: var(--ink); }
+.legal-section p + p,
+.legal-section p + ul,
+.legal-section ul + p,
+.legal-section p + .legal-form { margin-top: 0.75rem; }
+.legal-section ul { padding-left: 1.25rem; list-style: disc; }
+.legal-section li + li { margin-top: 0.35rem; }
+.legal-section a { color: var(--terracotta-deep); text-decoration: underline; text-underline-offset: 2px; }
+.legal-form { padding: 1.25rem 1.5rem; background: var(--parchment); }
+.legal-form p + p { margin-top: 0.6rem; }
+.legal-updated { margin-top: 3rem; font-size: 0.875rem; color: var(--text-muted); }
+
+.legal-toc { position: sticky; top: 12rem; }
+.legal-toc ul { list-style: none; padding: 1.25rem 1.5rem; background: var(--parchment); }
+.legal-toc li + li { margin-top: 0.5rem; }
+.legal-toc a { font-size: 0.9375rem; line-height: 1.4; color: var(--ink); }
+.legal-toc a:hover { color: var(--terracotta-deep); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .legal-crumbs { animation: crewRise 0.6s 0.02s both; }
+  .legal-head h1 { animation: crewRise 0.6s 0.08s both; }
+  .legal-intro { animation: crewRise 0.6s 0.16s both; }
+  .legal-toc { animation: crewRise 0.6s 0.28s both; }
+  .legal-section:nth-child(1) { animation: crewRise 0.6s 0.22s both; }
+  .legal-section:nth-child(2) { animation: crewRise 0.6s 0.28s both; }
+  .legal-section:nth-child(3) { animation: crewRise 0.6s 0.34s both; }
+  .legal-section:nth-child(4) { animation: crewRise 0.6s 0.40s both; }
+}
+
+@media (max-width: 900px) {
+  .legal-body { grid-template-columns: 1fr; }
+  .legal-toc { display: none; }
+}
+@media (max-width: 720px) {
+  .legal { padding: 2.25rem 1.25rem 3.5rem; }
+}
+
+/* Footer legal row: company identity (required by law) + legal links */
+.footer-legal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+}
+.footer-company { font-size: 0.8125rem; line-height: 1.5; color: rgba(255, 255, 255, 0.6); }
+.footer-legal-links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; list-style: none; }
+.footer-legal-links a {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.footer-legal-links a:hover { color: var(--cream); }
+
+/* Contact form: sentence-case labels at a readable size,
+   16px fields, a plain-text button. Replaces the tiny tracked caps. */
+.contact-form-field label {
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ink);
+}
+.contact-form-optional { font-size: 0.875rem; font-weight: 400; color: var(--text-muted); }
+.contact-form-field input,
+.contact-form-field textarea,
+.contact-form-field select { font-size: 1rem; }
+.contact-form-submit {
+  font-family: var(--sans);
+  font-size: 1rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.contact-form-disclaimer { font-size: 0.9375rem; }
+.contact-form-sent { font-size: 1rem; }
+.contact-channels li strong {
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* Footer running text at a readable 15px (was 13px) */
+.footer .footer-brand .footer-desc,
+.footer .footer-newsletter-desc,
+.footer .footer-company { font-size: 0.9375rem; }
+
+/* Form fields need a visible edge of their own. The no-hairline rule is
+   for decoration; real inputs keep a border so people see where to type.
+   (The earlier pass made the shared --hairline token transparent.) */
+.contact-form-field input,
+.contact-form-field select,
+.contact-form-field textarea {
+  background-color: var(--parchment);
+  border: 1px solid #c9cdd2;
+}
+.newsletter-input {
+  padding: 0.75rem 0.875rem;
+  background: var(--parchment);
+  border: 1px solid #c9cdd2;
+  border-radius: 2px;
+  font-family: var(--sans);
+}
+.newsletter-form { gap: 0.75rem; border-bottom: 0; padding-bottom: 0; }
+.footer-newsletter-input {
+  padding: 0.6rem 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+}
+.footer-newsletter-input::placeholder { color: rgba(255, 255, 255, 0.55); }
+.footer-newsletter-form { gap: 0.5rem; padding-bottom: 0; }
+.contact-form-field input:focus,
+.contact-form-field select:focus,
+.contact-form-field textarea:focus,
+.newsletter-input:focus,
+.footer-newsletter-input:focus {
+  outline: 2px solid var(--sage);
+  outline-offset: 1px;
+  border-color: var(--ink);
+}
+.newsletter-input { min-width: 0; }
+@media (max-width: 480px) {
+  .newsletter-form { flex-wrap: wrap; }
+  .newsletter-input { flex-basis: 100%; }
+}

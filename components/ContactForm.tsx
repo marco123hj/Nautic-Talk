@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { sendContactMessage } from "@/app/actions/contact";
+import { COMPANY } from "@/lib/site";
 
 function ArrowRight({ size = 14 }: { size?: number }) {
   return (
@@ -28,7 +29,7 @@ export default function ContactForm() {
     { value: "otro", label: t("subjectOther") },
   ];
 
-  const emailAddress = t("emailAddress");
+  const emailAddress = COMPANY.email;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

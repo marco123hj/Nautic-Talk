@@ -236,7 +236,10 @@
     "legal": "Legal notice",
     "privacy": "Privacy",
     "cookies": "Cookies",
-    "copyright": "© {year} Nautic Talk · All rights reserved"
+    "copyright": "© {year} Nautic Talk · All rights reserved",
+    "terms": "Terms and conditions",
+    "kvkLabel": "CoC",
+    "vatLabel": "VAT"
   },
   "language": {
     "label": "Language",
@@ -522,9 +525,11 @@
     "subjectWarranty": "Warranty or post-sale",
     "subjectB2B": "Distribution / B2B",
     "subjectOther": "Other",
-    "emailAddress": "info@nautictalk.nl",
-    "phoneNumber": "+31 6 12345678",
     "formSending": "Sending…",
-    "formError": "Sending did not work. Please try again or email us at"
+    "formError": "Sending did not work. Please try again or email us at",
+    "channelCompany": "Company details",
+    "country": "the Netherlands",
+    "kvkLabel": "CoC",
+    "vatLabel": "VAT"
   }
 }
