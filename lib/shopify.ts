@@ -221,7 +221,11 @@ interface ProductByHandleResponse {
 // ---------- Cart ----------
 
 const CART_CREATE_MUTATION = `
-  mutation CartCreate($input: CartInput!) {
+  mutation CartCreate(
+    $input: CartInput!
+    $language: LanguageCode
+    $country: CountryCode
+  ) @inContext(language: $language, country: $country) {
     cartCreate(input: $input) {
       cart {
         id
@@ -247,11 +251,23 @@ interface CartCreateResponse {
   };
 }
 
+// Shopify checkout languages; anything else falls back to the store default.
+const CHECKOUT_LANGUAGES: Record<string, string> = { nl: "NL", en: "EN" };
+// Countries the store sells to (its Shopify markets). Others start on NL.
+const CHECKOUT_COUNTRIES = ["NL", "BE", "DE"];
+
 export async function createShopifyCart(
-  lines: CartCreateLine[]
+  lines: CartCreateLine[],
+  locale?: string,
+  country?: string | null
 ): Promise<{ id: string; checkoutUrl: string }> {
   const data = await shopifyFetch<CartCreateResponse>(CART_CREATE_MUTATION, {
     input: { lines },
+    language: (locale && CHECKOUT_LANGUAGES[locale]) || null,
+    country:
+      country && CHECKOUT_COUNTRIES.includes(country.toUpperCase())
+        ? country.toUpperCase()
+        : "NL",
   });
   const errors = data.cartCreate.userErrors;
   if (errors.length) {

@@ -101,6 +101,7 @@ export default function CartSlideout() {
           merchandiseId: it.variantId,
           quantity: it.quantity,
         })),
+        locale,
       );
       if (res.ok) {
         window.location.href = res.url;
