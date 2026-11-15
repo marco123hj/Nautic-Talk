@@ -197,7 +197,9 @@
     "desc": "Product news, install guides and system improvements. No spam.",
     "placeholder": "you@email.com",
     "submit": "Subscribe",
-    "emailAria": "Email address"
+    "emailAria": "Email address",
+    "subscribed": "Done, you are on the list.",
+    "subscribeError": "That did not work. Please try again later."
   },
   "footerHero": {
     "eyebrow": "Nautic Talk",
@@ -512,8 +514,8 @@
     "formMessage": "Message",
     "formMessagePlaceholder": "Tell us how we can help. For technical advice, please include boat length, sailing area and sector (marine, cycling, industrial).",
     "formSubmit": "Send message",
-    "formDisclaimer": "Your email client will open to send the message. We reply within 24 working hours.",
-    "formSent": "Your message is ready to send in your email app. If it doesn't open automatically, write to ",
+    "formDisclaimer": "We reply within 24 working hours.",
+    "formSent": "Thanks, your message has been sent. We reply within 24 working hours.",
     "subjectInquiry": "General inquiry",
     "subjectAdvice": "Technical advice",
     "subjectOrder": "Order question",
@@ -521,6 +523,8 @@
     "subjectB2B": "Distribution / B2B",
     "subjectOther": "Other",
     "emailAddress": "info@nautictalk.nl",
-    "phoneNumber": "+31 6 12345678"
+    "phoneNumber": "+31 6 12345678",
+    "formSending": "Sending…",
+    "formError": "Sending did not work. Please try again or email us at"
   }
 }

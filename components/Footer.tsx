@@ -1,18 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import NewsletterForm from "./NewsletterForm";
 import { Link } from "@/i18n/navigation";
 import { useFavorites } from "./favorites/FavoritesContext";
 
 /* ============ ICONS ============ */
 
-function ArrowIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" />
-    </svg>
-  );
-}
 function IgIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -145,22 +139,7 @@ export default function Footer() {
           <div className="footer-newsletter">
             <div className="footer-col-title">{t("colNewsletter")}</div>
             <p className="footer-newsletter-desc">{t("newsletterDesc")}</p>
-            <form
-              className="footer-newsletter-form"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <input
-                type="email"
-                name="email"
-                placeholder={t("newsletterPlaceholder")}
-                aria-label="Email"
-                className="footer-newsletter-input"
-                required
-              />
-              <button type="submit" className="footer-newsletter-btn" aria-label="Subscribe">
-                <ArrowIcon />
-              </button>
-            </form>
+            <NewsletterForm variant="footer" />
           </div>
         </div>
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { sendContactMessage } from "@/app/actions/contact";
 
 function ArrowRight({ size = 14 }: { size?: number }) {
   return (
@@ -11,9 +12,12 @@ function ArrowRight({ size = 14 }: { size?: number }) {
   );
 }
 
+// Off-screen field that only bots fill in.
+const HONEYPOT: React.CSSProperties = { position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 };
+
 export default function ContactForm() {
   const t = useTranslations("contact");
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   const SUBJECTS = [
     { value: "consulta", label: t("subjectInquiry") },
@@ -26,41 +30,31 @@ export default function ContactForm() {
 
   const emailAddress = t("emailAddress");
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const name = String(fd.get("name") ?? "").trim();
-    const email = String(fd.get("email") ?? "").trim();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+
+    // Send the readable subject label rather than the internal option value.
     const subjectKey = String(fd.get("subject") ?? "consulta");
-    const phone = String(fd.get("phone") ?? "").trim();
-    const message = String(fd.get("message") ?? "").trim();
+    fd.set(
+      "subject",
+      SUBJECTS.find((s) => s.value === subjectKey)?.label ?? t("subjectInquiry"),
+    );
 
-    const subjectLabel =
-      SUBJECTS.find((s) => s.value === subjectKey)?.label ?? t("subjectInquiry");
-
-    const body = [
-      message,
-      "",
-      "---",
-      `${t("formName")}: ${name}`,
-      `${t("formEmail")}: ${email}`,
-      phone ? `${t("formPhone")}: ${phone}` : null,
-      `${t("formSubject")}: ${subjectLabel}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    const href =
-      `mailto:${emailAddress}` +
-      `?subject=${encodeURIComponent(`[Web] ${subjectLabel}`)}` +
-      `&body=${encodeURIComponent(body)}`;
-
-    window.location.href = href;
-    setSubmitted(true);
+    setStatus("sending");
+    const res = await sendContactMessage(fd);
+    if (res.ok) {
+      form.reset();
+      setStatus("sent");
+    } else {
+      setStatus("error");
+    }
   }
 
   return (
     <form className="contact-form" onSubmit={handleSubmit}>
+      <input type="text" name="company" tabIndex={-1} autoComplete="off" aria-hidden="true" style={HONEYPOT} />
       <div className="contact-form-grid">
         <div className="contact-form-field">
           <label htmlFor="cf-name">{t("formName")}</label>
@@ -120,17 +114,21 @@ export default function ContactForm() {
       </div>
 
       <div className="contact-form-bottom">
-        <button type="submit" className="contact-form-submit">
-          <span>{t("formSubmit")}</span>
+        <button type="submit" className="contact-form-submit" disabled={status === "sending"}>
+          <span>{status === "sending" ? t("formSending") : t("formSubmit")}</span>
           <ArrowRight />
         </button>
         <p className="contact-form-disclaimer">{t("formDisclaimer")}</p>
       </div>
 
-      {submitted && (
+      {status === "sent" && (
         <div className="contact-form-sent" role="status">
           &#x2713; {t("formSent")}
-          <a href={`mailto:${emailAddress}`}>{emailAddress}</a>.
+        </div>
+      )}
+      {status === "error" && (
+        <div className="contact-form-sent contact-form-error" role="alert">
+          {t("formError")} <a href={`mailto:${emailAddress}`}>{emailAddress}</a>.
         </div>
       )}
     </form>

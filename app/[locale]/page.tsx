@@ -7,6 +7,7 @@ import {
   type ShopifyProduct,
 } from "@/lib/shopify";
 import CrewHero from "@/components/home/CrewHero";
+import NewsletterForm from "@/components/NewsletterForm";
 
 function formatPrice(
   amount: string,
@@ -432,17 +433,7 @@ export default async function HomePage({
             {t("newsletter.title1")} <em>{t("newsletter.titleEm")}</em>
           </h2>
           <p className="newsletter-desc">{t("newsletter.desc")}</p>
-          <div className="newsletter-form">
-            <input
-              type="email"
-              className="newsletter-input"
-              placeholder={t("newsletter.placeholder")}
-              aria-label={t("newsletter.emailAria")}
-            />
-            <button type="button" className="newsletter-btn">
-              {t("newsletter.submit")} <ArrowRight size={12} />
-            </button>
-          </div>
+          <NewsletterForm variant="home" />
         </div>
       </section>
     </>

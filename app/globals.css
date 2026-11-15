@@ -5638,3 +5638,7 @@ body { font-size: 1rem; }
 
 /* copyright line reads as a sentence, not a tracked micro-label */
 .footer-bottom-copy { text-transform: none !important; }
+
+/* Form send states (contact form + newsletter) */
+.contact-form-error { border-left-color: #b42318; }
+.newsletter-status { margin-top: 0.75rem; font-size: 0.875rem; }
