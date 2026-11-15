@@ -95,6 +95,7 @@ function BizumIcon() {
 export default function Footer() {
   const t = useTranslations("footer");
   const tFav = useTranslations("favorites");
+  const tContact = useTranslations("contact");
   const { count: favCount } = useFavorites();
   const year = new Date().getFullYear();
 
@@ -110,7 +111,7 @@ export default function Footer() {
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><IgIcon /></a>
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><FbIcon /></a>
               <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><LinkedInIcon /></a>
-              <a href="mailto:hola@nautictalk.com" aria-label="Email"><MailIcon /></a>
+              <a href={`mailto:${tContact("emailAddress")}`} aria-label="Email"><MailIcon /></a>
             </div>
           </div>
 
