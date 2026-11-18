@@ -1,4 +1,4 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import {
@@ -7,84 +7,73 @@ import {
   getCategory,
   type ShopifyProduct,
 } from "@/lib/shopify";
+import { categoryLabel, displayName, formatPrice, shopCopy, specLine, specRows } from "@/lib/catalog";
+import { COMPANY } from "@/lib/site";
 import AddToCartButton from "@/components/cart/AddToCartButton";
-import ProductDescription from "@/components/ProductDescription";
+import ProductCard from "@/components/shop/ProductCard";
+import ProductDetails from "@/components/shop/ProductDetails";
+import Reviews from "@/components/shop/Reviews";
+import Stars from "@/components/shop/Stars";
+import { REVIEW_COPY } from "@/components/shop/reviewCopy";
+import { getProductReviews, reviewsConnected } from "@/lib/judgeme";
+import Gallery from "@/components/shop/Gallery";
+import p from "@/components/shop/product.module.css";
 
-function priceLocale(locale: string) {
-  switch (locale) {
-    case "nl":
-      return "nl-NL";
-    case "en":
-      return "en-GB";
-    default:
-      return "es-ES";
-  }
-}
+// Shipping and returns lines repeat what the site and the returns page
+// already promise (lib/legal.ts); change them there first.
+const COPY = {
+  nl: {
+    vat: "incl. btw, verzending apart",
+    facts: ["Gratis verzending vanaf € 120", "30 dagen bedenktijd", "2 jaar garantie"],
+    help: "Vragen over dit product? Bel",
+    related: "Bekijk ook",
+    picture: "Foto",
+    error: "Dit product kon niet geladen worden.",
+    back: "Terug naar alle producten",
+    details: {
+      description: "Beschrijving",
+      specs: "Specificaties",
+      shipping: "Verzending en retour",
+      more: "Lees meer",
+      less: "Minder tonen",
+      shippingLines: [
+        "Gratis verzending vanaf € 120. Daaronder zie je de verzendkosten bij het afrekenen.",
+        "We verzenden binnen 24 tot 72 uur, door de hele EU.",
+        "Je hebt 30 dagen bedenktijd. Stuur het product compleet terug en je krijgt je geld terug. Het terugsturen betaal je zelf, behalve bij een defect of een verkeerde levering.",
+        "2 jaar garantie. Is er iets kapot, dan lossen wij het op en betalen wij de verzending.",
+      ],
+      returnsLink: "Alles over retourneren",
+    },
+  },
+  en: {
+    vat: "incl. VAT, shipping extra",
+    facts: ["Free shipping from € 120", "30-day returns", "2-year warranty"],
+    help: "Questions about this product? Call",
+    related: "You may also need",
+    picture: "Picture",
+    error: "This product could not be loaded.",
+    back: "Back to all products",
+    details: {
+      description: "Description",
+      specs: "Specifications",
+      shipping: "Shipping and returns",
+      more: "Read more",
+      less: "Show less",
+      shippingLines: [
+        "Free shipping from € 120. Below that, you see the shipping cost at checkout.",
+        "We ship within 24 to 72 hours, across the EU.",
+        "You have 30 days to change your mind. Send the product back complete and you get your money back. Return shipping is on you, unless the product is faulty or we sent the wrong item.",
+        "2-year warranty. If something breaks, we fix it and pay the shipping.",
+      ],
+      returnsLink: "All about returns",
+    },
+  },
+};
 
-function formatPrice(amount: string, currency: string, locale: string = "es-ES") {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-  }).format(parseFloat(amount));
-}
-
-function translateCategory(cat: string, t: (k: string) => string): string {
-  const map: Record<string, string> = {
-    Intercomunicadores: "catIntercoms",
-    Soportes: "catMounts",
-    Cascos: "catHelmets",
-    Auriculares: "catHeadsets",
-    Accesorios: "catAccessories",
-    Merchandising: "catMerch",
-  };
-  const key = map[cat];
-  return key ? t(key) : cat;
-}
-
-function ArrowRight({ size = 14 }: { size?: number }) {
+function Check() {
   return (
-    <svg width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" />
-    </svg>
-  );
-}
-
-function IconTruck() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="7" width="12" height="10" rx="1" />
-      <path d="M14 10h4l3 3v4h-7" />
-      <circle cx="7" cy="18" r="2" />
-      <circle cx="17" cy="18" r="2" />
-    </svg>
-  );
-}
-
-function IconShield() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-3z" />
-      <path d="M9 12l2 2 4-4" />
-    </svg>
-  );
-}
-
-function IconReturn() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12a9 9 0 1 1-3-6.7" />
-      <path d="M21 3v6h-6" />
-    </svg>
-  );
-}
-
-function IconSupport() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 14v-2a7 7 0 1 1 14 0v2" />
-      <rect x="3" y="14" width="4" height="6" rx="1" />
-      <rect x="17" y="14" width="4" height="6" rx="1" />
-      <path d="M19 20v1a3 3 0 0 1-3 3h-2" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12.5l4 4L19 6.5" />
     </svg>
   );
 }
@@ -94,43 +83,23 @@ export async function generateMetadata({
 }: {
   params: Promise<{ handle: string; locale: string }>;
 }) {
-  const { handle } = await params;
-  const product = await getProductByHandle(handle);
+  const { handle, locale } = await params;
+  const product = await getProductByHandle(handle).catch(() => null);
   if (!product) return {};
   return {
-    title: `${product.title} | Nautic Talk`,
-    description:
-      product.description?.slice(0, 160) ??
-      "Equipo de comunicaci\u00f3n marina Nautic Talk.",
+    title: displayName(product, locale),
+    description: product.description?.slice(0, 160),
   };
 }
 
-/* ============ RELATED PRODUCTS ============ */
-
-function pickRelated(
-  all: ShopifyProduct[],
-  current: ShopifyProduct,
-  limit = 4,
-): ShopifyProduct[] {
-  const currentCat = getCategory(current);
-  const others = all.filter((p) => p.id !== current.id);
-
-  // Same category first, then fill with anything
-  const sameCat = others.filter((p) => getCategory(p) === currentCat);
-  const rest = others.filter((p) => getCategory(p) !== currentCat);
-
-  // Pin the two flagships higher in the "rest" bucket so they surface when
-  // a tiny accessory has no category siblings
-  rest.sort((a, b) => {
-    const w = (p: ShopifyProduct) =>
-      p.handle === "nautic-talk-trio" ? 0 : p.handle === "nautic-talk-duo" ? 1 : 2;
-    return w(a) - w(b);
-  });
-
-  return [...sameCat, ...rest].slice(0, limit);
+// Same category first, then the two sets, then the rest.
+function pickRelated(all: ShopifyProduct[], current: ShopifyProduct, limit = 4) {
+  const cat = getCategory(current);
+  const others = all.filter((x) => x.id !== current.id);
+  const w = (x: ShopifyProduct) =>
+    getCategory(x) === cat ? 0 : x.handle === "nautic-talk-trio" || x.handle === "nautic-talk-duo" ? 1 : 2;
+  return [...others].sort((a, b) => w(a) - w(b)).slice(0, limit);
 }
-
-/* ============ PAGE ============ */
 
 export default async function ProductPage({
   params,
@@ -139,192 +108,114 @@ export default async function ProductPage({
 }) {
   const { handle, locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations({ locale, namespace: "product" });
-  const tFilters = await getTranslations({ locale, namespace: "filters" });
-  const tCatalog = await getTranslations({ locale, namespace: "catalog" });
-  const priceLoc = priceLocale(locale);
+  const t = COPY[locale === "en" ? "en" : "nl"];
+  const c = shopCopy(locale);
 
-  let product;
-  let allProducts: ShopifyProduct[] = [];
+  let product: ShopifyProduct | null = null;
+  let all: ShopifyProduct[] = [];
   try {
-    [product, allProducts] = await Promise.all([
-      getProductByHandle(handle),
-      getProducts(30),
-    ]);
+    [product, all] = await Promise.all([getProductByHandle(handle), getProducts(40)]);
   } catch {
     return (
-      <div className="error-message">
-        <p>{t("errorLoad")}</p>
-        <Link
-          href="/productos"
-          style={{ color: "var(--terracotta-deep)", display: "inline-block", marginTop: "1rem" }}
-        >
-          &larr; {t("backToCatalog")}
-        </Link>
+      <div className={p.wrap} style={{ padding: "4rem 1.25rem" }}>
+        <p>{t.error}</p>
+        <Link href="/productos">{t.back}</Link>
       </div>
     );
   }
+  if (!product) notFound();
 
-  if (!product) {
-    notFound();
-  }
+  // Reviews show once the Judge.me token is set; locally the section is
+  // always there so the design can be checked.
+  const showReviews = reviewsConnected || process.env.NODE_ENV !== "production";
+  const reviews = await getProductReviews(product.id);
+  const rc = REVIEW_COPY[locale === "en" ? "en" : "nl"];
+  const ratingText = reviews.rating.toLocaleString(locale === "en" ? "en-GB" : "nl-NL", { maximumFractionDigits: 1 });
 
+  const name = displayName(product, locale);
+  const category = getCategory(product);
   const price = product.priceRange.minVariantPrice;
-  const mainImage = product.images.edges[0]?.node;
-  const additionalImages = product.images.edges.slice(1, 5);
-  const related = pickRelated(allProducts, product, 3);
-
-  const teaser = product.description
-    ? product.description.trim().split(/\.\s+/).slice(0, 2).join(". ") + "."
-    : "";
-
-  const category = translateCategory(getCategory(product), tFilters);
+  const images = product.images.edges.map((e) => e.node);
+  const variants = product.variants?.edges.map((e) => e.node) ?? [];
+  const available = product.availableForSale ?? variants.some((v) => v.availableForSale);
+  const related = pickRelated(all, product);
+  const tel = COMPANY.phone.replace(/\s/g, "");
 
   return (
-    <>
-      <div className="page-header">
-        <div className="page-header-breadcrumb">
-          <Link href="/">{t("breadcrumbHome")}</Link>
-          <span>/</span>
-          <Link href="/productos">{t("breadcrumbCatalog")}</Link>
-          <span>/</span>
-          <span className="page-header-breadcrumb-current">{product.title}</span>
-        </div>
-      </div>
+    <div className={p.wrap}>
+      <nav aria-label="Breadcrumb">
+        <ol className={p.crumbs}>
+          <li><Link href="/">{c.home}</Link></li>
+          <li><Link href="/productos">{c.products}</Link></li>
+          <li><Link href={`/productos?category=${category}`}>{categoryLabel(category, locale)}</Link></li>
+          <li aria-current="page">{name}</li>
+        </ol>
+      </nav>
 
-      <div className="product-detail">
-        {/* IMAGES */}
-        <div className="product-images">
-          {mainImage && (
-            <div className="product-main-image">
-              <img
-                src={mainImage.url}
-                alt={mainImage.altText ?? product.title}
-              />
-              <div className="product-main-image-tag">{category}</div>
-            </div>
-          )}
-          {additionalImages.length > 0 && (
-            <div className="product-thumbnails">
-              {additionalImages.map(({ node: image }, index) => (
-                <div key={index} className="product-thumbnail">
-                  <img
-                    src={image.url}
-                    alt={image.altText ?? `${product.title} ${index + 2}`}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className={p.top}>
+        <Gallery images={images} name={name} thumbLabel={t.picture} />
 
-        {/* BUY COLUMN */}
-        <div className="product-info">
-          <div className="product-vendor">{product.vendor || "Nautic Talk"}</div>
-          <h1>{product.title}</h1>
-          <div className="product-price">
-            {formatPrice(price.amount, price.currencyCode, priceLoc)}
-            <span className="product-price-note">{t("priceNote")}</span>
+        <div className={p.head}>
+          <h1 className={p.title}>{name}</h1>
+          {reviews.count > 0 && (
+            <a href="#reviews" className={p.rating}>
+              <Stars rating={reviews.rating} label={rc.outOf(ratingText)} />
+              <span>{ratingText} · {rc.count(reviews.count)}</span>
+            </a>
+          )}
+          <p className={p.spec}>{specLine(product, locale)}</p>
+          <div className={p.priceRow}>
+            <p className={p.price}>{formatPrice(price.amount, price.currencyCode, locale)}</p>
+            <p className={p.vat}>{t.vat}</p>
           </div>
+          <p className={`${p.stock} ${available ? "" : p.stockOut}`}>{available ? c.available : c.soldOut}</p>
+        </div>
 
-          {teaser && <p className="product-teaser">{teaser}</p>}
-
+        <div className={p.purchase}>
           <AddToCartButton
             handle={product.handle}
-            title={product.title}
-            image={mainImage?.url}
-            variants={
-              product.variants?.edges.map((e) => ({
-                id: e.node.id,
-                title: e.node.title,
-                availableForSale: e.node.availableForSale,
-                price: e.node.price,
-              })) ?? []
-            }
+            title={name}
+            image={images[0]?.url}
+            variants={variants.map((v) => ({
+              id: v.id,
+              title: v.title,
+              availableForSale: v.availableForSale,
+              price: v.price,
+            }))}
           />
 
-          {/* Trust row */}
-          <ul className="product-trust">
-            <li>
-              <IconTruck />
-              <div>
-                <strong>{t("trustShippingTitle")}</strong>
-                <span>{t("trustShippingDesc")}</span>
-              </div>
-            </li>
-            <li>
-              <IconShield />
-              <div>
-                <strong>{t("trustWarrantyTitle")}</strong>
-                <span>{t("trustWarrantyDesc")}</span>
-              </div>
-            </li>
-            <li>
-              <IconReturn />
-              <div>
-                <strong>{t("trustReturnsTitle")}</strong>
-                <span>{t("trustReturnsDesc")}</span>
-              </div>
-            </li>
-            <li>
-              <IconSupport />
-              <div>
-                <strong>{t("trustSupportTitle")}</strong>
-                <span>{t("trustSupportDesc")}</span>
-              </div>
-            </li>
+          <ul className={p.facts}>
+            {t.facts.map((f) => (
+              <li key={f}><Check /> {f}</li>
+            ))}
+            <li><Check /> <span>{t.help} <a href={`tel:${tel}`}>{COMPANY.phone}</a></span></li>
           </ul>
 
-          {product.descriptionHtml && (
-            <ProductDescription html={product.descriptionHtml} />
-          )}
+          <ProductDetails
+            html={product.descriptionHtml}
+            specs={specRows(product.handle, locale)}
+            copy={t.details}
+          />
         </div>
       </div>
 
-      {/* RELATED PRODUCTS */}
+      {showReviews && <Reviews data={reviews} gid={product.id} productName={name} locale={locale} />}
+
       {related.length > 0 && (
-        <section className="related-products">
-          <div className="related-products-head">
-            <div>
-              <div className="section-eyebrow">{t("relatedEyebrow")}</div>
-              <h2 className="section-title">{t("relatedTitle1")} <em>{t("relatedTitleEm")}</em></h2>
-            </div>
-            <Link href="/productos" className="btn-link">
-              <span>{t("relatedAllCatalog")}</span>
-              <ArrowRight size={12} />
-            </Link>
-          </div>
-          <div className="related-grid">
-            {related.map((p) => {
-              const image = p.images.edges[0]?.node;
-              const pprice = p.priceRange.minVariantPrice;
-              return (
-                <Link
-                  key={p.id}
-                  href={`/productos/${p.handle}`}
-                  className="product-card product-card--related"
-                >
-                  <div className="product-card-image">
-                    {image && (
-                      <img src={image.url} alt={image.altText ?? p.title} />
-                    )}
-                  </div>
-                  <div className="product-card-vendor">{p.vendor || "Nautic Talk"}</div>
-                  <div className="product-card-title">{p.title}</div>
-                  <div className="product-card-bottom">
-                    <span className="product-card-price">
-                      {formatPrice(pprice.amount, pprice.currencyCode, priceLoc)}
-                    </span>
-                    <span className="product-card-arrow">
-                      {tCatalog("viewShort")} <ArrowRight size={12} />
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
+        <section
+          className={p.section}
+          aria-labelledby="related-title"
+          style={{ marginBottom: 96 }}
+          {...(showReviews ? {} : { "data-buy-bar-end": "" })}
+        >
+          <h2 className={p.h2} id="related-title">{t.related}</h2>
+          <div className={p.related}>
+            {related.map((r) => (
+              <ProductCard key={r.id} product={r} locale={locale} />
+            ))}
           </div>
         </section>
       )}
-    </>
+    </div>
   );
 }

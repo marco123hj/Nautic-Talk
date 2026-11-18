@@ -2,32 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import type { ShopifyProduct } from "@/lib/shopify";
+import ProductCard from "./shop/ProductCard";
+import { displayName } from "@/lib/catalog";
 import ProductFilters, {
   EMPTY_FILTERS,
   type FilterState,
   getCategory,
 } from "./ProductFilters";
-
-function formatPrice(amount: string, currency: string, locale: string = "es-ES") {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-  }).format(parseFloat(amount));
-}
-
-function priceLocale(locale: string) {
-  switch (locale) {
-    case "nl":
-      return "nl-NL";
-    case "en":
-      return "en-GB";
-    default:
-      return "es-ES";
-  }
-}
 
 function ArrowRight({ size = 12 }: { size?: number }) {
   return (
@@ -62,7 +45,6 @@ interface Props {
 export default function CatalogClient({ products }: Props) {
   const t = useTranslations("catalog");
   const locale = useLocale();
-  const priceLoc = priceLocale(locale);
 
   const sortOptions: { value: SortKey; label: string }[] = [
     { value: "relevance", label: t("sortRelevance") },
@@ -108,7 +90,7 @@ export default function CatalogClient({ products }: Props) {
       if (filters.priceMax !== null && price > filters.priceMax) return false;
       // Search filter
       if (q) {
-        const hay = `${p.title} ${p.description ?? ""} ${p.vendor ?? ""}`.toLowerCase();
+        const hay = `${displayName(p, locale)} ${p.title} ${p.description ?? ""} ${p.vendor ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -128,7 +110,7 @@ export default function CatalogClient({ products }: Props) {
           parseFloat(a.priceRange.minVariantPrice.amount),
       );
     } else if (sort === "name") {
-      result = [...result].sort((a, b) => a.title.localeCompare(b.title, locale));
+      result = [...result].sort((a, b) => displayName(a, locale).localeCompare(displayName(b, locale), locale));
     } else if (sort === "relevance") {
       // Promote Trio and Duo to top
       const weight = (p: ShopifyProduct) => {
@@ -140,7 +122,7 @@ export default function CatalogClient({ products }: Props) {
     }
 
     return result;
-  }, [products, filters, sort]);
+  }, [products, filters, sort, locale]);
 
   const activeFilterCount =
     filters.categories.length +
@@ -216,38 +198,9 @@ export default function CatalogClient({ products }: Props) {
           </div>
         ) : (
           <div className="product-grid product-grid--catalog">
-            {filtered.map((product, index) => {
-              const image = product.images.edges[0]?.node;
-              const price = product.priceRange.minVariantPrice;
-
-              return (
-                <Link
-                  key={product.id}
-                  href={`/productos/${product.handle}`}
-                  className="product-card"
-                >
-                  <div className="product-card-image">
-                    {image && (
-                      <img
-                        src={image.url}
-                        alt={image.altText ?? product.title}
-                        loading={index < 8 ? "eager" : "lazy"}
-                      />
-                    )}
-                  </div>
-                  <div className="product-card-vendor">{product.vendor || "Nautic Talk"}</div>
-                  <div className="product-card-title">{product.title}</div>
-                  <div className="product-card-bottom">
-                    <span className="product-card-price">
-                      {formatPrice(price.amount, price.currencyCode, priceLoc)}
-                    </span>
-                    <span className="product-card-arrow">
-                      {t("viewShort")} <ArrowRight size={12} />
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
+            {filtered.map((product, index) => (
+              <ProductCard key={product.id} product={product} locale={locale} eager={index < 6} headingLevel="h2" />
+            ))}
           </div>
         )}
       </main>

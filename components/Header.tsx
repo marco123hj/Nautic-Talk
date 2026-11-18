@@ -1,31 +1,16 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useCart } from "./cart/CartContext";
+import { useFavorites } from "./favorites/FavoritesContext";
+import { COMPANY } from "@/lib/site";
+import { shopCopy } from "@/lib/catalog";
+import h from "./shop/header.module.css";
 
 /* ============ ICONS ============ */
-
-function CompassMark({ size = 24 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
-      <path d="M12 7l2.5 4.5L12 17l-2.5-5.5L12 7z" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
 
 function SearchIcon() {
   return (
@@ -38,11 +23,19 @@ function SearchIcon() {
 
 function CartIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 6h14l-1.5 8.5a1.5 1.5 0 01-1.5 1.2H7a1.5 1.5 0 01-1.5-1.2L4 6z" />
       <path d="M4 6l-1-3H1" />
       <circle cx="8" cy="18" r="1" fill="currentColor" stroke="none" />
       <circle cx="15" cy="18" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z" />
     </svg>
   );
 }
@@ -83,7 +76,6 @@ function ArrowIcon() {
 
 export default function Header() {
   const t = useTranslations("nav");
-  const tAnn = useTranslations("announce");
   const tFilters = useTranslations("filters");
   const tScenarios = useTranslations("scenarios");
 
@@ -92,6 +84,8 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { count: cartCount, openCart } = useCart();
+  const { count: favCount } = useFavorites();
+  const c = shopCopy(useLocale());
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -128,75 +122,91 @@ export default function Header() {
 
   return (
     <>
-      <header className="site-header">
-        {/* MAIN ROW */}
-        <div className="hdr-main">
-          <Link href="/" className="hdr-logo" aria-label="Nautic Talk">
-            <span className="hdr-logo-mark"><CompassMark /></span>
-            <span className="hdr-logo-text">
-              <span className="hdr-logo-name">Nautic Talk</span>
-              <span className="hdr-logo-sub">{t("wordmarkSub")}</span>
-            </span>
-          </Link>
-
-          <form className="hdr-search" onSubmit={handleSearch} role="search">
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("search.placeholder")}
-              aria-label={t("searchAria")}
-            />
-            <button type="submit" aria-label={t("searchAria")}>
-              <SearchIcon />
-            </button>
-          </form>
-
-          <div className="hdr-actions">
-            <Suspense fallback={null}>
-              <LanguageSwitcher />
-            </Suspense>
-            <button
-              type="button"
-              className="hdr-action hdr-cart"
-              onClick={openCart}
-              aria-label={t("cartAria")}
-            >
-              <span className="hdr-action-icon">
-                <CartIcon />
-                {cartCount > 0 && <span className="hdr-cart-badge">{cartCount}</span>}
-              </span>
-              <span className="hdr-action-label">{t("cartAria")}</span>
-            </button>
-            <button
-              type="button"
-              className="hdr-action hdr-hamburger"
-              onClick={() => setDrawerOpen(true)}
-              aria-label={t("menuAria")}
-            >
-              <MenuIcon />
-            </button>
+      <header className={h.header}>
+        {/* SERVICE BAR */}
+        <div className={h.service}>
+          <div className={`${h.inner} ${h.serviceInner}`}>
+            <ul className={h.usps}>
+              {c.usps.map((u) => (
+                <li key={u}><CheckIcon /> {u}</li>
+              ))}
+            </ul>
+            <a className={h.phone} href={`tel:${COMPANY.phone.replace(/s/g, "")}`}>
+              {c.questions} <span>{COMPANY.phone}</span>
+            </a>
           </div>
         </div>
 
-        {/* ORANGE CATEGORY NAV */}
-        <nav className="hdr-nav" aria-label={t("products")}>
-          <ul className="hdr-nav-list">
-            <li><Link href="/productos">{t("products")}</Link></li>
-            {categories.map((c) => (
-              <li key={c.href}><Link href={c.href}>{c.label}</Link></li>
-            ))}
-            <li><Link href="/sistema">{t("system")}</Link></li>
-            <li><Link href="/contacto">{t("contact")}</Link></li>
-          </ul>
-        </nav>
+        {/* MAIN ROW */}
+        <div className={h.inner}>
+          <div className={h.main}>
+            <Link href="/" className={h.logo} aria-label="Nautic Talk">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/nautic-talk.svg" alt="Nautic Talk" width={534} height={74} />
+            </Link>
 
-        {/* USP STRIP */}
-        <div className="hdr-usp">
-          <span><CheckIcon /> {tAnn("shipping")}</span>
-          <span><CheckIcon /> {tAnn("warranty")}</span>
-          <span><CheckIcon /> {tAnn("support")}</span>
+            <form className={h.search} onSubmit={handleSearch} role="search">
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("search.placeholder")}
+                aria-label={t("searchAria")}
+              />
+              <button type="submit" aria-label={t("searchAria")}>
+                <SearchIcon />
+              </button>
+            </form>
+
+            <div className={h.actions}>
+              <Suspense fallback={null}>
+                <LanguageSwitcher />
+              </Suspense>
+              <Link href="/favoritos" className={h.action} aria-label={c.favorites}>
+                <span className={h.actionIcon}>
+                  <HeartIcon />
+                  {favCount > 0 && <span className={h.badge}>{favCount}</span>}
+                </span>
+                <span className={h.actionLabel}>{c.favorites}</span>
+              </Link>
+              <button type="button" className={h.action} onClick={openCart} aria-label={t("cartAria")}>
+                <span className={h.actionIcon}>
+                  <CartIcon />
+                  {cartCount > 0 && <span className={h.badge}>{cartCount}</span>}
+                </span>
+                <span className={h.actionLabel}>{c.cart}</span>
+              </button>
+              <button
+                type="button"
+                className={`${h.action} ${h.burger}`}
+                onClick={() => setDrawerOpen(true)}
+                aria-label={t("menuAria")}
+              >
+                <MenuIcon />
+              </button>
+            </div>
+          </div>
         </div>
+
+        {/* CATEGORY BAR */}
+        <nav className={h.cats} aria-label={t("products")}>
+          <div className={`${h.inner} ${h.catsInner}`}>
+            <ul className={h.catList}>
+              <li>
+                <Link href="/productos" className={h.catAll}>
+                  <MenuIcon /> {c.allProducts}
+                </Link>
+              </li>
+              {categories.map((cat) => (
+                <li key={cat.href}><Link href={cat.href}>{cat.label}</Link></li>
+              ))}
+            </ul>
+            <ul className={`${h.catList} ${h.catSecondary}`}>
+              <li><Link href="/sistema">{c.system}</Link></li>
+              <li><Link href="/contacto">{c.contact}</Link></li>
+            </ul>
+          </div>
+        </nav>
       </header>
 
       {/* MOBILE DRAWER */}
@@ -209,8 +219,8 @@ export default function Header() {
           >
             <div className="drawer-head">
               <div className="drawer-brand">
-                <div className="hdr-logo-mark"><CompassMark /></div>
-                <span className="hdr-logo-name">Nautic Talk</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="hdr-logo-img" src="/brand/nautic-talk.svg" alt="Nautic Talk" width={534} height={74} />
               </div>
               <button
                 type="button"

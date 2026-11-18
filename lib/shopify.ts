@@ -74,6 +74,20 @@ const PRODUCTS_QUERY = `
               currencyCode
             }
           }
+          availableForSale
+          variants(first: 10) {
+            edges {
+              node {
+                id
+                title
+                availableForSale
+                price {
+                  amount
+                  currencyCode
+                }
+              }
+            }
+          }
           images(first: 1) {
             edges {
               node {
@@ -100,13 +114,14 @@ const PRODUCT_BY_HANDLE_QUERY = `
       descriptionHtml
       vendor
       productType
+      availableForSale
       priceRange {
         minVariantPrice {
           amount
           currencyCode
         }
       }
-      images(first: 5) {
+      images(first: 8) {
         edges {
           node {
             url
@@ -190,6 +205,7 @@ export interface ShopifyProduct {
   descriptionHtml?: string;
   vendor?: string;
   productType?: string;
+  availableForSale?: boolean;
   priceRange: {
     minVariantPrice: ShopifyPrice;
   };
@@ -307,6 +323,20 @@ const NEWEST_PRODUCTS_QUERY = `
             minVariantPrice {
               amount
               currencyCode
+            }
+          }
+          availableForSale
+          variants(first: 10) {
+            edges {
+              node {
+                id
+                title
+                availableForSale
+                price {
+                  amount
+                  currencyCode
+                }
+              }
             }
           }
           images(first: 1) {

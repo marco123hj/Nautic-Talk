@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import CatalogClient from "@/components/CatalogClient";
-import { getProducts, type ShopifyProduct } from "@/lib/shopify";
+import { getProducts, getCategory, type ShopifyProduct } from "@/lib/shopify";
+import { categoryLabel } from "@/lib/catalog";
 
 export async function generateMetadata({
   params,
@@ -19,10 +20,13 @@ export async function generateMetadata({
 
 export default async function ProductsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ category?: string }>;
 }) {
   const { locale } = await params;
+  const { category } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "catalog" });
 
@@ -35,23 +39,31 @@ export default async function ProductsPage({
     error = err instanceof Error ? err.message : "Failed to load products";
   }
 
+  const shown = category ? products.filter((p) => getCategory(p) === category).length : products.length;
+
   return (
     <>
       <div className="page-header">
-        <div className="page-header-breadcrumb">
+        <nav className="page-header-breadcrumb" aria-label="Breadcrumb">
           <Link href="/">{t("breadcrumbHome")}</Link>
           <span>/</span>
-          {t("breadcrumb")}
-        </div>
+          {category ? (
+            <>
+              <Link href="/productos">{t("breadcrumb")}</Link>
+              <span>/</span>
+              {categoryLabel(category, locale)}
+            </>
+          ) : (
+            t("breadcrumb")
+          )}
+        </nav>
         <div className="page-header-title">
-          <h1>
-            {t("title1")} <em>{t("titleEm")}</em>
-          </h1>
+          <h1>{category ? categoryLabel(category, locale) : `${t("title1")} ${t("titleEm")}`}</h1>
           <p>
-            {products.length > 0
-              ? products.length === 1
-                ? t("countProduct", { count: products.length })
-                : t("countProducts", { count: products.length })
+            {shown > 0
+              ? shown === 1
+                ? t("countProduct", { count: shown })
+                : t("countProducts", { count: shown })
               : t("subtitle")}
           </p>
         </div>

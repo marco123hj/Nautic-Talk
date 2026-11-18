@@ -91,7 +91,8 @@ export default function Footer() {
         <div className="footer-grid">
           {/* Brand */}
           <div className="footer-brand">
-            <div className="footer-wordmark">Nautic Talk</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="footer-logo" src="/brand/nautic-talk-white.svg" alt="Nautic Talk" width={534} height={74} />
             <p className="footer-desc">{t("desc")}</p>
             <div className="footer-social">
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><IgIcon /></a>
